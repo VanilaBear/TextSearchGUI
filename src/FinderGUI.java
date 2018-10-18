@@ -15,8 +15,8 @@ public class FinderGUI extends JFrame {
 	private JPanel panelBottom = new JPanel();
 	private JTabbedPane tabbedPane = new JTabbedPane();
 	private JLabel chooseDirLabel = new JLabel("---");
-	private JTextField wordToFindField = new JTextField("plus");
-	private JTextField extensionField = new JTextField(".txt");
+	private JTextField wordToFindField = new JTextField("example");
+	private JTextField extensionField = new JTextField(".log");
 	
 	private String directory = "";
 	private String textToFind = "";
