@@ -50,13 +50,7 @@ public class CustomNode {
 		
 	}
 	
-	@Override
-	public boolean equals(Object obj) {
-		
-		CustomNode cmpObj = (CustomNode)obj;
-		return incrementalPath.equals( cmpObj.incrementalPath ) && data.equals( cmpObj.data );
-		
-	}
+	
 	
 	public void createNode(int increment, DefaultMutableTreeNode node,
 	                       int globalCounter, DefaultMutableTreeNode[] array) {
@@ -84,4 +78,25 @@ public class CustomNode {
 		
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		
+		CustomNode that = (CustomNode) o;
+		
+		if (!childs.equals(that.childs)) return false;
+		if (!leafs.equals(that.leafs)) return false;
+		if (!data.equals(that.data)) return false;
+		return incrementalPath.equals(that.incrementalPath);
+	}
+	
+	@Override
+	public int hashCode() {
+		int result = childs.hashCode();
+		result = 31 * result + leafs.hashCode();
+		result = 31 * result + data.hashCode();
+		result = 31 * result + incrementalPath.hashCode();
+		return result;
+	}
 }
