@@ -11,103 +11,101 @@ import java.util.ArrayList;
 
 class SearchMethods {
 	
-	public static ArrayList<String> searchGoodFiles(String  directory, ArrayList<String> paths,
-	                                                String word,  String extension){
+	static ArrayList<String> searchGoodFiles(String  directory, ArrayList<String> paths,
+	                                                String word,  String extension) {
 		File dir = new File(directory);
-		
-		for (File i : dir.listFiles()) {
-			try {
+		try {
+			for (File i : dir.listFiles()) {
+				
 				if (i.isDirectory()) {
 					searchGoodFiles(i.getPath(), paths, word, extension);
-				}
-				else if (isInFile(i.getPath(), word, extension)){
+				} else if (isInFile(i.getPath(), word, extension)) {
 					paths.add(i.getPath());
 				}
 			}
-			catch (Exception e){e.printStackTrace();}
+		} catch (NullPointerException npe) {npe.printStackTrace();
 		}
-		return paths;
 		
+		return paths;
 	}
 	
-	public static void selectText(File file, ArrayList<ArrayList<Integer>> array,
-	                              String word, JTextPane textPane) throws IOException {
+	private static StyledDocument docInsertString(StyledDocument document ,int length, String str,
+	                                              SimpleAttributeSet attributeSet){
+		try {
+			document.insertString(length, str, attributeSet);
+		} catch (BadLocationException ble) {ble.printStackTrace();}
 		
-		InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
-		BufferedReader fileReader = new BufferedReader(reader);
+		return document;}
+	
+	static void selectText(File file, ArrayList<ArrayList<Integer>> array,
+	                              String word, JTextPane textPane){
 		
-		int strCounter = -1;
-		String line;
-		
-		textPane.setText("");
-		
-		StyledDocument doc = textPane.getStyledDocument();
-		SimpleAttributeSet keyWord = new SimpleAttributeSet();
-		StyleConstants.setForeground(keyWord, Color.BLACK);
-		StyleConstants.setBackground(keyWord, Color.YELLOW);
-		StyleConstants.setBold(keyWord, true);
-		
-		int j = 0;
-		
-		while ((line = fileReader.readLine()) != null) {
-			strCounter += 1;
-			if (j < array.size()){
-				if (strCounter == array.get(j).get(0)){
-					int i = 0;
-					int k = 2;
-					while (i < line.length()){
-						if (k < array.get(j).size()) {
-							if (i == array.get(j).get(k)) {
-								try {
-									doc.insertString(doc.getLength(),
-											String.valueOf(line.substring(i, i + word.length())), keyWord);
-								} catch (BadLocationException ble) {ble.printStackTrace();}
-								k += 1;
-								i += word.length();
+		try(BufferedReader fileReader = new BufferedReader(new InputStreamReader(
+				new FileInputStream(file), StandardCharsets.UTF_8))){
+			
+			int rowCounter = -1;
+			String line;
+			
+			textPane.setText("");
+			
+			StyledDocument doc = textPane.getStyledDocument();
+			SimpleAttributeSet keyWord = new SimpleAttributeSet();
+			StyleConstants.setForeground(keyWord, Color.BLACK);
+			StyleConstants.setBackground(keyWord, Color.YELLOW);
+			StyleConstants.setBold(keyWord, true);
+			
+			int j = 0;
+			
+			while ((line = fileReader.readLine()) != null) {  // i know that's bad
+				rowCounter += 1;
+				if (j < array.size()){
+					if (rowCounter == array.get(j).get(0)){
+						int currentPositionInRow = 0;
+						int k = 2;
+						while (currentPositionInRow < line.length()){
+							if (k < array.get(j).size()) {
+								if (currentPositionInRow == array.get(j).get(k)) {
+									doc = docInsertString(doc, doc.getLength(),
+											String.valueOf(line.substring(currentPositionInRow,
+													currentPositionInRow + word.length())), keyWord);
+									k += 1;
+									currentPositionInRow += word.length();
+								}
+								else {
+									doc = docInsertString(doc, doc.getLength(),
+											String.valueOf(line.charAt(currentPositionInRow)), null);
+									currentPositionInRow +=1;
+								}
 							}
 							else {
-								try {
-									doc.insertString(doc.getLength(), String.valueOf(line.charAt(i)), null);
-								} catch (BadLocationException ble){ble.printStackTrace();}
-								i +=1;
+								doc = docInsertString(doc,doc.getLength(),
+										String.valueOf(line.charAt(currentPositionInRow)), null );
+								currentPositionInRow +=1;
 							}
 						}
-						else {
-							try {
-								doc.insertString(doc.getLength(), String.valueOf(line.charAt(i)), null);
-							} catch (BadLocationException ble){ble.printStackTrace();}
-							i +=1;
-						}
+						doc = docInsertString(doc, doc.getLength(), "\n", null);
+						j+=1;
 					}
-					try {
-						doc.insertString(doc.getLength(), "\n", null);
-					} catch (BadLocationException ble){ble.printStackTrace();}
-					j+=1;
+					else {
+						doc = docInsertString(doc, doc.getLength(), line+"\n", null);
+					}
 				}
 				else {
-					try {
-						doc.insertString(doc.getLength(), line+"\n", null);
-					} catch (BadLocationException ble){ble.printStackTrace();}
+					doc = docInsertString(doc, doc.getLength(), line+"\n", null);
 				}
-			}
-			else {
-				try {
-					doc.insertString(doc.getLength(), line+"\n", null);
-				} catch (BadLocationException ble){ble.printStackTrace();}
-			}
-		}
+			}}
+		catch (IOException ioe){ioe.printStackTrace();}
 	}
 	
-	public static ArrayList<ArrayList<Integer>> finder(String filePath, String word) {
+	static ArrayList<ArrayList<Integer>> finder(String filePath, String word) {
 		
 		ArrayList<ArrayList<Integer>> indList = new ArrayList<>();
 		
-		try {
+		try (BufferedReader reader = new BufferedReader(new FileReader(filePath))){
 			
 			int str = 0;
 			int pos = 0;
-			FileReader fileIn = new FileReader(filePath);
-			BufferedReader reader = new BufferedReader(fileIn);
+			
 			String line;
 			
 			while ((line = reader.readLine()) != null) {
@@ -131,21 +129,19 @@ class SearchMethods {
 			return indList;
 			
 			
-		} catch (IOException e) {e.printStackTrace();}
+		} catch (IOException ioe) {ioe.printStackTrace();}
 		return indList;
 		
 	}
 	
-	public static boolean isInFile(String path, String word, String ext){
+	private static boolean isInFile(String path, String word, String extension){
 		
 		String[] ar = path.split("/");
 		boolean isNeeded = false;
 		
-		if (ar[ar.length-1].endsWith(ext)) {
-			try {
+		if (ar[ar.length-1].endsWith(extension)) {
+			try(BufferedReader reader = new BufferedReader(new FileReader(path))) {
 				
-				FileReader fileIn = new FileReader(path);             //file
-				BufferedReader reader = new BufferedReader(fileIn);
 				String line;
 				
 				while ((line = reader.readLine()) != null) {
@@ -154,7 +150,7 @@ class SearchMethods {
 						break;
 					}
 				}
-			} catch (IOException e) {e.printStackTrace();}
+			} catch (IOException ioe) {ioe.printStackTrace();}
 		}
 		
 		return isNeeded;
